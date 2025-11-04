@@ -35,6 +35,7 @@ func printInfo(*cobra.Command, []string) error {
 	printTuple(fmat, "Config", config.AppConfigFile, color.Cyan)
 	printTuple(fmat, "Custom Views", config.AppViewsFile, color.Cyan)
 	printTuple(fmat, "Plugins", config.AppPluginsFile, color.Cyan)
+	printTuple(fmat, "Leaders", config.AppLeadersFile, color.Cyan)
 	printTuple(fmat, "Hotkeys", config.AppHotKeysFile, color.Cyan)
 	printTuple(fmat, "Aliases", config.AppAliasesFile, color.Cyan)
 	printTuple(fmat, "Skins", config.AppSkinsDir, color.Cyan)

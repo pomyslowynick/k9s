@@ -236,8 +236,17 @@ func (a *App) contextNames() ([]string, error) {
 }
 
 func (a *App) keyboard(evt *tcell.EventKey) *tcell.EventKey {
-	if k, ok := a.HasAction(ui.AsKey(evt)); ok && !a.Content.IsTopDialog() {
-		return k.Action(evt)
+	if waitingLeaderFollowUp {
+		slog.Info(fmt.Sprintf("App if hit: Leader follow up state: %t", waitingLeaderFollowUp))
+		if k, ok := a.HasAction(true, ui.AsKey(evt)); ok && !a.Content.IsTopDialog() {
+			return k.Action(evt)
+		}
+		waitingLeaderFollowUp = false
+	} else {
+		slog.Info(fmt.Sprintf("App else: Leader follow up state: %t", waitingLeaderFollowUp))
+		if k, ok := a.HasAction(false, ui.AsKey(evt)); ok && !a.Content.IsTopDialog() {
+			return k.Action(evt)
+		}
 	}
 
 	return evt

@@ -80,6 +80,9 @@ var (
 
 	// AppHotKeysFile tracks hotkeys config file.
 	AppHotKeysFile string
+
+	// AppLeadersFile tracks plugins config file.
+	AppLeadersFile string
 )
 
 // InitLogLoc initializes K9s logs location.
@@ -152,6 +155,7 @@ func initK9sEnvLocs() error {
 
 	AppConfigFile = filepath.Join(AppConfigDir, data.MainConfigFile)
 	AppHotKeysFile = filepath.Join(AppConfigDir, "hotkeys.yaml")
+	AppLeadersFile = filepath.Join(AppConfigDir, "leaders.yaml")
 	AppAliasesFile = filepath.Join(AppConfigDir, "aliases.yaml")
 	AppPluginsFile = filepath.Join(AppConfigDir, "plugins.yaml")
 	AppViewsFile = filepath.Join(AppConfigDir, "views.yaml")
@@ -173,6 +177,7 @@ func initXDGLocs() error {
 	}
 
 	AppHotKeysFile = filepath.Join(AppConfigDir, "hotkeys.yaml")
+	AppLeadersFile = filepath.Join(AppConfigDir, "leaders.yaml")
 	AppAliasesFile = filepath.Join(AppConfigDir, "aliases.yaml")
 	AppPluginsFile = filepath.Join(AppConfigDir, "plugins.yaml")
 	AppViewsFile = filepath.Join(AppConfigDir, "views.yaml")

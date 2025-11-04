@@ -21,24 +21,26 @@ type App struct {
 	*tview.Application
 	Configurator
 
-	Main    *Pages
-	flash   *model.Flash
-	actions *KeyActions
-	views   map[string]tview.Primitive
-	cmdBuff *model.FishBuff
-	running bool
-	mx      sync.RWMutex
+	Main          *Pages
+	flash         *model.Flash
+	actions       *KeyActions
+	leaderActions *KeyActions
+	views         map[string]tview.Primitive
+	cmdBuff       *model.FishBuff
+	running       bool
+	mx            sync.RWMutex
 }
 
 // NewApp returns a new app.
 func NewApp(cfg *config.Config, _ string) *App {
 	a := App{
-		Application:  tview.NewApplication(),
-		actions:      NewKeyActions(),
-		Configurator: Configurator{Config: cfg, Styles: config.NewStyles()},
-		Main:         NewPages(),
-		flash:        model.NewFlash(model.DefaultFlashDelay),
-		cmdBuff:      model.NewFishBuff(':', model.CommandBuffer),
+		Application:   tview.NewApplication(),
+		actions:       NewKeyActions(),
+		leaderActions: NewKeyActions(),
+		Configurator:  Configurator{Config: cfg, Styles: config.NewStyles()},
+		Main:          NewPages(),
+		flash:         model.NewFlash(model.DefaultFlashDelay),
+		cmdBuff:       model.NewFishBuff(':', model.CommandBuffer),
 	}
 
 	a.views = map[string]tview.Primitive{
@@ -143,11 +145,19 @@ func (a *App) Conn() client.Connection {
 
 func (a *App) bindKeys() {
 	a.actions = NewKeyActionsFromMap(KeyMap{
-		KeyColon:       NewKeyAction("Cmd", a.activateCmd, false),
-		tcell.KeyCtrlR: NewKeyAction("Redraw", a.redrawCmd, false),
-		tcell.KeyCtrlP: NewKeyAction("Persist", a.saveCmd, false),
+		KeyColon: NewKeyAction("Cmd", a.activateCmd, false),
+		// tcell.KeyCtrlR: NewKeyAction("Redraw", a.redrawCmd, false),
+		// tcell.KeyCtrlP: NewKeyAction("Persist", a.saveCmd, false),
 		tcell.KeyCtrlU: NewSharedKeyAction("Clear Filter", a.clearCmd, false),
 		tcell.KeyCtrlQ: NewSharedKeyAction("Clear Filter", a.clearCmd, false),
+	})
+
+	a.leaderActions = NewKeyActionsFromMap(KeyMap{
+		KeyColon:       NewKeyAction("Cmd", a.saveCmd, false),
+		tcell.KeyCtrlR: NewKeyAction("Rafal Redraws", a.saveCmd, false),
+		tcell.KeyCtrlP: NewKeyAction("New Persist", a.saveCmd, false),
+		tcell.KeyCtrlU: NewSharedKeyAction("Clear Filter", a.saveCmd, false),
+		tcell.KeyCtrlQ: NewSharedKeyAction("Clear Filter", a.saveCmd, false),
 	})
 }
 
@@ -175,10 +185,8 @@ func (a *App) ResetCmd() {
 }
 
 func (a *App) saveCmd(*tcell.EventKey) *tcell.EventKey {
-	if err := a.Config.Save(true); err != nil {
-		a.Flash().Err(err)
-	}
-	a.Flash().Info("current context config saved")
+	a.Flash().Info("Rafal Wins")
+	a.QueueUpdateDraw(func() {})
 
 	return nil
 }
@@ -209,7 +217,10 @@ func (a *App) InCmdMode() bool {
 }
 
 // HasAction checks if key matches a registered binding.
-func (a *App) HasAction(key tcell.Key) (KeyAction, bool) {
+func (a *App) HasAction(leader bool, key tcell.Key) (KeyAction, bool) {
+	if leader {
+		return a.leaderActions.Get(key)
+	}
 	return a.actions.Get(key)
 }
 

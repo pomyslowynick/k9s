@@ -612,7 +612,7 @@ func (b *Browser) refreshActions() {
 	aa := ui.NewKeyActionsFromMap(ui.KeyMap{
 		ui.KeyC:        ui.NewKeyAction("Copy", b.cpCmd, false),
 		tcell.KeyEnter: ui.NewKeyAction("View", b.enterCmd, false),
-		tcell.KeyCtrlR: ui.NewKeyAction("Refresh", b.refreshCmd, false),
+		tcell.KeyCtrlR: ui.NewKeyAction("Rafal Modified Refresh", b.refreshCmd, false),
 	})
 
 	if b.app.ConOK() {
@@ -652,6 +652,10 @@ func (b *Browser) refreshActions() {
 	if err := hotKeyActions(b, b.Actions()); err != nil {
 		slog.Warn("Hotkeys load failed", slogs.Error, err)
 		b.app.Logo().Warn("HotKeys load failed!")
+	}
+	if err := leaderActions(b, b.LeaderActions()); err != nil {
+		slog.Warn("Leaders load failed", slogs.Error, err)
+		b.app.Logo().Warn("Leaders load failed!")
 	}
 	b.app.Menu().HydrateMenu(b.Hints())
 }

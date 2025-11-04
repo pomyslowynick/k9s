@@ -37,25 +37,26 @@ type (
 // Table represents tabular data.
 type Table struct {
 	*SelectTable
-	gvr         *client.GVR
-	sortCol     model1.SortColumn
-	manualSort  bool
-	Path        string
-	Extras      string
-	actions     *KeyActions
-	cmdBuff     *model.FishBuff
-	styles      *config.Styles
-	viewSetting *config.ViewSetting
-	colorerFn   model1.ColorerFunc
-	decorateFn  DecorateFunc
-	wide        bool
-	toast       bool
-	hasMetrics  bool
-	ctx         context.Context
-	mx          sync.RWMutex
-	readOnly    bool
-	noIcon      bool
-	fullGVR     bool
+	gvr           *client.GVR
+	sortCol       model1.SortColumn
+	manualSort    bool
+	Path          string
+	Extras        string
+	actions       *KeyActions
+	leaderActions *KeyActions
+	cmdBuff       *model.FishBuff
+	styles        *config.Styles
+	viewSetting   *config.ViewSetting
+	colorerFn     model1.ColorerFunc
+	decorateFn    DecorateFunc
+	wide          bool
+	toast         bool
+	hasMetrics    bool
+	ctx           context.Context
+	mx            sync.RWMutex
+	readOnly      bool
+	noIcon        bool
+	fullGVR       bool
 }
 
 // NewTable returns a new table view.
@@ -66,11 +67,12 @@ func NewTable(gvr *client.GVR) *Table {
 			model: model.NewTable(gvr),
 			marks: make(map[string]struct{}),
 		},
-		ctx:     context.Background(),
-		gvr:     gvr,
-		actions: NewKeyActions(),
-		cmdBuff: model.NewFishBuff('/', model.FilterBuffer),
-		sortCol: model1.SortColumn{ASC: true},
+		ctx:           context.Background(),
+		gvr:           gvr,
+		actions:       NewKeyActions(),
+		leaderActions: NewKeyActions(),
+		cmdBuff:       model.NewFishBuff('/', model.FilterBuffer),
+		sortCol:       model1.SortColumn{ASC: true},
 	}
 }
 
@@ -224,6 +226,11 @@ func (t *Table) ToggleToast() {
 func (t *Table) ToggleWide() {
 	t.wide = !t.wide
 	t.Refresh()
+}
+
+// Actions returns active menu bindings.
+func (t *Table) LeaderActions() *KeyActions {
+	return t.leaderActions
 }
 
 // Actions returns active menu bindings.

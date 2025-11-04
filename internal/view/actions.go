@@ -168,6 +168,62 @@ func pluginActions(r Runner, aa *ui.KeyActions) error {
 	return errs
 }
 
+func leaderActions(r Runner, aa *ui.KeyActions) error {
+	aa.Range(func(k tcell.Key, a ui.KeyAction) {
+		if a.Opts.Plugin {
+			aa.Delete(k)
+		}
+	})
+
+	path, err := r.App().Config.ContextPluginsPath()
+	if err != nil {
+		return err
+	}
+	pp := config.NewLeaders()
+	if err := pp.Load(path, true); err != nil {
+		return err
+	}
+
+	var (
+		errs    error
+		aliases = r.Aliases()
+		ro      = r.App().Config.IsReadOnly()
+	)
+	for k := range pp.Plugins {
+		if !inScope(pp.Plugins[k].Scopes, aliases) || (ro && pp.Plugins[k].Dangerous) {
+			continue
+		}
+		key, err := asKey(pp.Plugins[k].ShortCut)
+		if err != nil {
+			errs = errors.Join(errs, err)
+			continue
+		}
+		if _, ok := aa.Get(key); ok {
+			if !pp.Plugins[k].Override {
+				errs = errors.Join(errs, fmt.Errorf("duplicate plugin key found for %q in %q", pp.Plugins[k].ShortCut, k))
+				continue
+			}
+			slog.Debug("Plugin overrode action shortcut",
+				slogs.Plugin, k,
+				slogs.Key, pp.Plugins[k].ShortCut,
+			)
+		}
+
+		plugin := pp.Plugins[k]
+		aa.Add(key, ui.NewKeyActionWithOpts(
+			pp.Plugins[k].Description,
+			pluginAction(r, &plugin),
+			ui.ActionOpts{
+				Visible:   true,
+				Plugin:    true,
+				Dangerous: plugin.Dangerous,
+			},
+		))
+	}
+
+	return errs
+}
+
 func pluginAction(r Runner, p *config.Plugin) ui.ActionHandler {
 	return func(evt *tcell.EventKey) *tcell.EventKey {
 		path := r.GetSelectedItem()

@@ -5,6 +5,7 @@ package view
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"path/filepath"
 	"strings"
@@ -18,6 +19,8 @@ import (
 	"github.com/derailed/k9s/internal/view/cmd"
 	"github.com/derailed/tcell/v2"
 )
+
+var waitingLeaderFollowUp bool
 
 // Table represents a table viewer.
 type Table struct {
@@ -99,8 +102,18 @@ func (t *Table) keyboard(evt *tcell.EventKey) *tcell.EventKey {
 		return evt
 	}
 
-	if a, ok := t.Actions().Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
-		return a.Action(evt)
+	if waitingLeaderFollowUp {
+		slog.Info(fmt.Sprintf("Table if hit: Leader follow up state: %t", waitingLeaderFollowUp))
+		if a, ok := t.LeaderActions().Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
+			return a.Action(evt)
+		}
+		waitingLeaderFollowUp = false
+	} else {
+
+		slog.Info(fmt.Sprintf("Table else: Leader follow up state: %t", waitingLeaderFollowUp))
+		if a, ok := t.Actions().Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
+			return a.Action(evt)
+		}
 	}
 
 	return evt
@@ -205,7 +218,7 @@ func (t *Table) saveCmd(*tcell.EventKey) *tcell.EventKey {
 func (t *Table) bindKeys() {
 	t.Actions().Bulk(ui.KeyMap{
 		ui.KeyHelp:             ui.NewKeyAction("Help", t.App().helpCmd, true),
-		ui.KeySpace:            ui.NewSharedKeyAction("Mark", t.markCmd, false),
+		ui.KeySpace:            ui.NewSharedKeyAction("Plugin Leader", t.markCmd, false),
 		tcell.KeyCtrlSpace:     ui.NewSharedKeyAction("Mark Range", t.markSpanCmd, false),
 		tcell.KeyCtrlBackslash: ui.NewSharedKeyAction("Marks Clear", t.clearMarksCmd, false),
 		tcell.KeyCtrlS:         ui.NewSharedKeyAction("Save", t.saveCmd, false),
@@ -215,6 +228,16 @@ func (t *Table) bindKeys() {
 		ui.KeyShiftN:           ui.NewKeyAction("Sort Name", t.SortColCmd(nameCol, true), false),
 		ui.KeyShiftA:           ui.NewKeyAction("Sort Age", t.SortColCmd(ageCol, true), false),
 	})
+
+	t.LeaderActions().Bulk(ui.KeyMap{
+		ui.KeyHelp: ui.NewKeyAction("Rafal's Help", t.testNewFunc, true),
+	})
+}
+
+func (t *Table) testNewFunc(*tcell.EventKey) *tcell.EventKey {
+	t.app.Flash().Info("We win today")
+
+	return nil
 }
 
 func (t *Table) toggleFaultCmd(*tcell.EventKey) *tcell.EventKey {
@@ -257,9 +280,10 @@ func (t *Table) cpNsCmd(evt *tcell.EventKey) *tcell.EventKey {
 	return nil
 }
 
-func (t *Table) markCmd(*tcell.EventKey) *tcell.EventKey {
-	t.ToggleMark()
-	t.Refresh()
+func (t *Table) markCmd(evt *tcell.EventKey) *tcell.EventKey {
+
+	t.app.Flash().Info("Leader key pressed, waiting for second key...")
+	waitingLeaderFollowUp = true
 
 	return nil
 }
