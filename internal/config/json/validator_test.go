@@ -13,6 +13,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestValidateLeadersFreds(t *testing.T) {
+	leadersPath := "testdata/leaders/freds.yaml"
+	bb, err := os.ReadFile(leadersPath)
+	require.NoError(t, err)
+
+	p := json.NewValidator()
+	require.NoError(t, p.Validate(json.PluginLeadersSchema, bb), leadersPath)
+}
+
 func TestValidatePluginSnippet(t *testing.T) {
 	plugPath := "testdata/plugins/snippet.yaml"
 	bb, err := os.ReadFile(plugPath)

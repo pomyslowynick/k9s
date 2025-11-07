@@ -80,6 +80,15 @@ func (c *Config) ContextPluginsPath() (string, error) {
 	return AppContextPluginsFile(ct.GetClusterName(), c.K9s.activeContextName), nil
 }
 
+func (c *Config) ContextLeadersPath() (string, error) {
+	ct, err := c.K9s.ActiveContext()
+	if err != nil {
+		return "", err
+	}
+
+	return AppContextLeadersFile(ct.GetClusterName(), c.K9s.activeContextName), nil
+}
+
 func setK8sTimeout(flags *genericclioptions.ConfigFlags, d time.Duration) {
 	v := d.String()
 	flags.Timeout = &v

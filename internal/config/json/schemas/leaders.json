@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "K9s leaders schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "leaders": {
+      "type": "object",
+      "additionalProperties": {
+        "properties": {
+          "keyspace": {
+            "type": "string"
+          },
+          "shortcuts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {
+                "shortCut": { "type": "string" },
+                "confirm": { "type": "boolean" },
+                "dangerous": { "type": "boolean" },
+                "scopes": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "command": { "type": "string" },
+                "background": { "type": "boolean" },
+                "overwriteOutput": { "type": "boolean" },
+                "args": {
+                  "type": "array",
+                  "items": { "type": ["string", "number"] }
+                }
+              },
+              "required": ["shortCut", "scopes", "command"]
+            }
+          }
+        },
+        "required": [
+          "keyspace"
+        ]
+      },
+      "required": []
+    }
+  },
+  "required": [
+    "leaders"
+  ]
+}

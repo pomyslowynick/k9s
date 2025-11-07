@@ -230,6 +230,10 @@ func AppContextPluginsFile(cluster, context string) string {
 	return filepath.Join(AppContextsDir, data.SanitizeContextSubpath(cluster, context), "plugins.yaml")
 }
 
+func AppContextLeadersFile(cluster, context string) string {
+	return filepath.Join(AppContextsDir, data.SanitizeContextSubpath(cluster, context), "leaders.yaml")
+}
+
 // AppContextHotkeysFile generates a valid context specific hotkeys file path.
 func AppContextHotkeysFile(cluster, context string) string {
 	return filepath.Join(AppContextsDir, data.SanitizeContextSubpath(cluster, context), "hotkeys.yaml")

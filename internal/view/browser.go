@@ -612,7 +612,6 @@ func (b *Browser) refreshActions() {
 	aa := ui.NewKeyActionsFromMap(ui.KeyMap{
 		ui.KeyC:        ui.NewKeyAction("Copy", b.cpCmd, false),
 		tcell.KeyEnter: ui.NewKeyAction("View", b.enterCmd, false),
-		tcell.KeyCtrlR: ui.NewKeyAction("Rafal Modified Refresh", b.refreshCmd, false),
 	})
 
 	if b.app.ConOK() {

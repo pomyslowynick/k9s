@@ -27,6 +27,11 @@ type Plugins struct {
 	Plugins plugins `yaml:"plugins"`
 }
 
+type leaders map[string]Plugin
+type Leaders struct {
+	Leaders leaders `yaml:"leaders"`
+}
+
 // Plugin describes a K9s plugin.
 type Plugin struct {
 	Scopes          []string `yaml:"scopes"`
@@ -86,6 +91,7 @@ func (p *Plugins) load(path string) error {
 	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
+
 	bb, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -124,6 +130,14 @@ func (p *Plugins) load(path string) error {
 		}
 		for k := range oo {
 			p.Plugins[k] = oo[k]
+		}
+	case json.PluginLeaders:
+		var oo Leaders
+		if err := yaml.Unmarshal(bb, &oo); err != nil {
+			return fmt.Errorf("plugin unmarshal failed for %s: %w", path, err)
+		}
+		for k := range oo.Leaders {
+			p.Plugins[k] = oo.Leaders[k]
 		}
 	}
 

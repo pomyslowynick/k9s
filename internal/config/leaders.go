@@ -10,49 +10,6 @@ import (
 	"github.com/adrg/xdg"
 )
 
-// import (
-// 	"bytes"
-// 	"errors"
-// 	"fmt"
-// 	"io/fs"
-// 	"log/slog"
-// 	"os"
-// 	"path/filepath"
-// 	"strings"
-
-// 	"github.com/adrg/xdg"
-// 	"github.com/derailed/k9s/internal/config/data"
-// 	"github.com/derailed/k9s/internal/config/json"
-// 	"github.com/derailed/k9s/internal/slogs"
-// 	"gopkg.in/yaml.v3"
-// )
-
-// type plugins map[string]Plugin
-
-// // Plugins represents a collection of plugins.
-// type Plugins struct {
-// 	Plugins plugins `yaml:"plugins"`
-// }
-
-// // Plugin describes a K9s plugin.
-// type Plugin struct {
-// 	Scopes          []string `yaml:"scopes"`
-// 	Args            []string `yaml:"args"`
-// 	ShortCut        string   `yaml:"shortCut"`
-// 	Override        bool     `yaml:"override"`
-// 	Pipes           []string `yaml:"pipes"`
-// 	Description     string   `yaml:"description"`
-// 	Command         string   `yaml:"command"`
-// 	Confirm         bool     `yaml:"confirm"`
-// 	Background      bool     `yaml:"background"`
-// 	Dangerous       bool     `yaml:"dangerous"`
-// 	OverwriteOutput bool     `yaml:"overwriteOutput"`
-// }
-
-// func (p Plugin) String() string {
-// 	return fmt.Sprintf("[%s] %s(%s)", p.ShortCut, p.Command, strings.Join(p.Args, " "))
-// }
-
 func NewLeaders() Plugins {
 	return Plugins{
 		Plugins: make(map[string]Plugin),
@@ -69,17 +26,17 @@ func (p Plugins) LoadLeaders(path string, loadExtra bool) error {
 	}
 
 	// Load from cluster/context config
-	if err := p.load(path); err != nil {
-		errs = errors.Join(errs, err)
-	}
+	// if err := p.load(path); err != nil {
+	// 	errs = errors.Join(errs, err)
+	// }
 
 	if !loadExtra {
 		return errs
 	}
 	// Load from XDG dirs
-	const k9sPluginsDir = "k9s/plugins"
+	const k9sLeadersDir = "k9s/leaders"
 	for _, dir := range append(xdg.DataDirs, xdg.DataHome, xdg.ConfigHome) {
-		path := filepath.Join(dir, k9sPluginsDir)
+		path := filepath.Join(dir, k9sLeadersDir)
 		if err := p.loadDir(path); err != nil {
 			errs = errors.Join(errs, err)
 		}
@@ -87,71 +44,3 @@ func (p Plugins) LoadLeaders(path string, loadExtra bool) error {
 
 	return errs
 }
-
-// func (p *Plugins) load(path string) error {
-// 	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
-// 		return nil
-// 	}
-// 	bb, err := os.ReadFile(path)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	scheme, err := data.JSONValidator.ValidatePlugins(bb)
-// 	if err != nil {
-// 		slog.Warn("Plugin schema validation failed",
-// 			slogs.Path, path,
-// 			slogs.Error, err,
-// 		)
-// 		return fmt.Errorf("plugin validation failed for %s: %w", path, err)
-// 	}
-
-// 	d := yaml.NewDecoder(bytes.NewReader(bb))
-// 	d.KnownFields(true)
-
-// 	switch scheme {
-// 	case json.PluginSchema:
-// 		var o Plugin
-// 		if err := yaml.Unmarshal(bb, &o); err != nil {
-// 			return fmt.Errorf("plugin unmarshal failed for %s: %w", path, err)
-// 		}
-// 		p.Plugins[strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))] = o
-// 	case json.PluginsSchema:
-// 		var oo Plugins
-// 		if err := yaml.Unmarshal(bb, &oo); err != nil {
-// 			return fmt.Errorf("plugin unmarshal failed for %s: %w", path, err)
-// 		}
-// 		for k := range oo.Plugins {
-// 			p.Plugins[k] = oo.Plugins[k]
-// 		}
-// 	case json.PluginMultiSchema:
-// 		var oo plugins
-// 		if err := yaml.Unmarshal(bb, &oo); err != nil {
-// 			return fmt.Errorf("plugin unmarshal failed for %s: %w", path, err)
-// 		}
-// 		for k := range oo {
-// 			p.Plugins[k] = oo[k]
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-// func (p Plugins) loadDir(dir string) error {
-// 	if _, err := os.Stat(dir); errors.Is(err, fs.ErrNotExist) {
-// 		return nil
-// 	}
-
-// 	var errs error
-// 	errs = errors.Join(errs, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-// 		if err != nil {
-// 			return err
-// 		}
-// 		if info.IsDir() || !isYamlFile(info.Name()) {
-// 			return nil
-// 		}
-// 		errs = errors.Join(errs, p.load(path))
-// 		return nil
-// 	}))
-
-// 	return errs
-// }

@@ -175,12 +175,12 @@ func leaderActions(r Runner, aa *ui.KeyActions) error {
 		}
 	})
 
-	path, err := r.App().Config.ContextPluginsPath()
+	path, err := r.App().Config.ContextLeadersPath()
 	if err != nil {
 		return err
 	}
 	pp := config.NewLeaders()
-	if err := pp.Load(path, true); err != nil {
+	if err := pp.LoadLeaders(path, true); err != nil {
 		return err
 	}
 

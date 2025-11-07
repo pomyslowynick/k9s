@@ -5,7 +5,6 @@ package view
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"path/filepath"
 	"strings"
@@ -103,14 +102,16 @@ func (t *Table) keyboard(evt *tcell.EventKey) *tcell.EventKey {
 	}
 
 	if waitingLeaderFollowUp {
-		slog.Info(fmt.Sprintf("Table if hit: Leader follow up state: %t", waitingLeaderFollowUp))
 		if a, ok := t.LeaderActions().Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
 			return a.Action(evt)
+			waitingLeaderFollowUp = false
 		}
-		waitingLeaderFollowUp = false
+
+		if ui.AsKey(evt) == tcell.KeyEsc {
+			waitingLeaderFollowUp = false
+		}
 	} else {
 
-		slog.Info(fmt.Sprintf("Table else: Leader follow up state: %t", waitingLeaderFollowUp))
 		if a, ok := t.Actions().Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
 			return a.Action(evt)
 		}

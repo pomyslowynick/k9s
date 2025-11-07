@@ -1,0 +1,23 @@
+# $XDG_CONFIG_HOME/k9s/leaders.yaml
+leaders:
+  freds:
+    keyspace: f
+    shortcuts: 
+    - shortCut: "Ctrl-r"
+      command: echo
+      scopes: pods
+      background: false
+      dangerous: false
+  zgreds:
+    keyspace: d
+    shortcuts:
+    - shortCut: "Ctrl-r"
+      command: echo
+      scopes: pods
+      background: false
+      dangerous: false
+    - shortCut: "Ctrl-r"
+      command: echo
+      scopes: pods
+      background: false
+      dangerous: false

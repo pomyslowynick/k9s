@@ -26,6 +26,9 @@ const (
 	// PluginMultiSchema describes plugin snippets schema.
 	PluginMultiSchema = "plugin-multi.json"
 
+	//  PluginLeadersSchema describes a leaders schema.
+	PluginLeadersSchema = "leaders.json"
+
 	// AliasesSchema describes aliases schema.
 	AliasesSchema = "aliases.json"
 
@@ -54,6 +57,9 @@ var (
 
 	//go:embed schemas/plugin-multi.json
 	pluginMultiSchema string
+
+	//go:embed schemas/leaders.json
+	leadersSchema string
 
 	//go:embed schemas/aliases.json
 	aliasSchema string
@@ -84,15 +90,16 @@ type Validator struct {
 func NewValidator() *Validator {
 	v := Validator{
 		schemas: map[string]gojsonschema.JSONLoader{
-			K9sSchema:         gojsonschema.NewStringLoader(k9sSchema),
-			ContextSchema:     gojsonschema.NewStringLoader(contextSchema),
-			AliasesSchema:     gojsonschema.NewStringLoader(aliasSchema),
-			ViewsSchema:       gojsonschema.NewStringLoader(viewsSchema),
-			PluginsSchema:     gojsonschema.NewStringLoader(pluginsSchema),
-			PluginSchema:      gojsonschema.NewStringLoader(pluginSchema),
-			PluginMultiSchema: gojsonschema.NewStringLoader(pluginMultiSchema),
-			HotkeysSchema:     gojsonschema.NewStringLoader(hotkeysSchema),
-			SkinSchema:        gojsonschema.NewStringLoader(skinSchema),
+			K9sSchema:           gojsonschema.NewStringLoader(k9sSchema),
+			ContextSchema:       gojsonschema.NewStringLoader(contextSchema),
+			AliasesSchema:       gojsonschema.NewStringLoader(aliasSchema),
+			ViewsSchema:         gojsonschema.NewStringLoader(viewsSchema),
+			PluginsSchema:       gojsonschema.NewStringLoader(pluginsSchema),
+			PluginSchema:        gojsonschema.NewStringLoader(pluginSchema),
+			PluginMultiSchema:   gojsonschema.NewStringLoader(pluginMultiSchema),
+			PluginLeadersSchema: gojsonschema.NewStringLoader(leadersSchema),
+			HotkeysSchema:       gojsonschema.NewStringLoader(hotkeysSchema),
+			SkinSchema:          gojsonschema.NewStringLoader(skinSchema),
 		},
 	}
 	v.register()
@@ -120,7 +127,7 @@ func (v *Validator) register() {
 // Checks for full, snippet and multi snippets schemas.
 func (v *Validator) ValidatePlugins(bb []byte) (string, error) {
 	var errs error
-	for _, k := range []string{PluginsSchema, PluginSchema, PluginMultiSchema} {
+	for _, k := range []string{PluginsSchema, PluginSchema, PluginMultiSchema, PluginLeadersSchema} {
 		if err := v.Validate(k, bb); err != nil {
 			errs = errors.Join(errs, err)
 			continue
