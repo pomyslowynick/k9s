@@ -24,7 +24,7 @@ type App struct {
 	Main          *Pages
 	flash         *model.Flash
 	actions       *KeyActions
-	leaderActions *KeyActions
+	leaderActions map[tcell.Key]*KeyActions
 	views         map[string]tview.Primitive
 	cmdBuff       *model.FishBuff
 	running       bool
@@ -36,7 +36,7 @@ func NewApp(cfg *config.Config, _ string) *App {
 	a := App{
 		Application:   tview.NewApplication(),
 		actions:       NewKeyActions(),
-		leaderActions: NewKeyActions(),
+		leaderActions: NewLeaderKeyspaces(),
 		Configurator:  Configurator{Config: cfg, Styles: config.NewStyles()},
 		Main:          NewPages(),
 		flash:         model.NewFlash(model.DefaultFlashDelay),
@@ -145,19 +145,11 @@ func (a *App) Conn() client.Connection {
 
 func (a *App) bindKeys() {
 	a.actions = NewKeyActionsFromMap(KeyMap{
-		KeyColon: NewKeyAction("Cmd", a.activateCmd, false),
-		// tcell.KeyCtrlR: NewKeyAction("Redraw", a.redrawCmd, false),
-		// tcell.KeyCtrlP: NewKeyAction("Persist", a.saveCmd, false),
+		KeyColon:       NewKeyAction("Cmd", a.activateCmd, false),
+		tcell.KeyCtrlR: NewKeyAction("Redraw", a.redrawCmd, false),
+		tcell.KeyCtrlP: NewKeyAction("Persist", a.saveCmd, false),
 		tcell.KeyCtrlU: NewSharedKeyAction("Clear Filter", a.clearCmd, false),
 		tcell.KeyCtrlQ: NewSharedKeyAction("Clear Filter", a.clearCmd, false),
-	})
-
-	a.leaderActions = NewKeyActionsFromMap(KeyMap{
-		KeyColon:       NewKeyAction("Cmd", a.saveCmd, false),
-		tcell.KeyCtrlR: NewKeyAction("Rafal Redraws", a.saveCmd, false),
-		tcell.KeyCtrlP: NewKeyAction("New Persist", a.saveCmd, false),
-		tcell.KeyCtrlU: NewSharedKeyAction("Clear Filter", a.saveCmd, false),
-		tcell.KeyCtrlQ: NewSharedKeyAction("Clear Filter", a.saveCmd, false),
 	})
 }
 
@@ -219,7 +211,11 @@ func (a *App) InCmdMode() bool {
 // HasAction checks if key matches a registered binding.
 func (a *App) HasAction(leader bool, key tcell.Key) (KeyAction, bool) {
 	if leader {
-		return a.leaderActions.Get(key)
+		keyspace, ok := a.leaderActions[key]
+		if ok {
+			return keyspace.Get(key)
+		}
+		return KeyAction{}, false
 	}
 	return a.actions.Get(key)
 }

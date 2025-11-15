@@ -168,12 +168,14 @@ func pluginActions(r Runner, aa *ui.KeyActions) error {
 	return errs
 }
 
-func leaderActions(r Runner, aa *ui.KeyActions) error {
-	aa.Range(func(k tcell.Key, a ui.KeyAction) {
-		if a.Opts.Plugin {
-			aa.Delete(k)
-		}
-	})
+func leaderActions(r Runner, aa map[tcell.Key]*ui.KeyActions) error {
+	for l := range aa {
+		aa[l].Range(func(k tcell.Key, a ui.KeyAction) {
+			if a.Opts.Plugin {
+				aa[l].Delete(k)
+			}
+		})
+	}
 
 	path, err := r.App().Config.ContextLeadersPath()
 	if err != nil {
@@ -189,36 +191,47 @@ func leaderActions(r Runner, aa *ui.KeyActions) error {
 		aliases = r.Aliases()
 		ro      = r.App().Config.IsReadOnly()
 	)
-	for k := range pp.Plugins {
-		if !inScope(pp.Plugins[k].Scopes, aliases) || (ro && pp.Plugins[k].Dangerous) {
-			continue
-		}
-		key, err := asKey(pp.Plugins[k].ShortCut)
-		if err != nil {
-			errs = errors.Join(errs, err)
-			continue
-		}
-		if _, ok := aa.Get(key); ok {
-			if !pp.Plugins[k].Override {
-				errs = errors.Join(errs, fmt.Errorf("duplicate plugin key found for %q in %q", pp.Plugins[k].ShortCut, k))
+	for l := range pp.Leaders {
+		for _, k := range pp.Leaders[l].Shortcuts {
+			var keyspace *ui.KeyActions
+
+			if !inScope(k.Scopes, aliases) || (ro && k.Dangerous) {
 				continue
 			}
-			slog.Debug("Plugin overrode action shortcut",
-				slogs.Plugin, k,
-				slogs.Key, pp.Plugins[k].ShortCut,
-			)
-		}
+			keyspaceLeaderKey, err := asKey(l)
+			key, err := asKey(k.ShortCut)
+			if err != nil {
+				errs = errors.Join(errs, err)
+				continue
+			}
 
-		plugin := pp.Plugins[k]
-		aa.Add(key, ui.NewKeyActionWithOpts(
-			pp.Plugins[k].Description,
-			pluginAction(r, &plugin),
-			ui.ActionOpts{
-				Visible:   true,
-				Plugin:    true,
-				Dangerous: plugin.Dangerous,
-			},
-		))
+			if _, ok := aa[keyspaceLeaderKey]; !ok {
+				aa[keyspaceLeaderKey] = ui.NewKeyActions()
+			}
+			keyspace = aa[keyspaceLeaderKey]
+
+			if _, ok := keyspace.Get(key); ok {
+				if !k.Override {
+					errs = errors.Join(errs, fmt.Errorf("duplicate plugin key found for %q in %q", k.ShortCut, k))
+					continue
+				}
+				slog.Debug("Plugin overrode action shortcut",
+					slogs.Plugin, k,
+					slogs.Key, k.ShortCut,
+				)
+			}
+
+			plugin := k
+			keyspace.Add(key, ui.NewKeyActionWithOpts(
+				k.Description,
+				pluginAction(r, &plugin),
+				ui.ActionOpts{
+					Visible:   true,
+					Plugin:    true,
+					Dangerous: plugin.Dangerous,
+				},
+			))
+		}
 	}
 
 	return errs

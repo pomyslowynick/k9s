@@ -70,6 +70,11 @@ func NewKeyActionWithOpts(d string, a ActionHandler, opts ActionOpts) KeyAction 
 	}
 }
 
+// NewLeaderKeyspaces returns a slice of key actions
+func NewLeaderKeyspaces() map[tcell.Key]*KeyActions {
+	return make(map[tcell.Key]*KeyActions)
+}
+
 // NewKeyActions returns a new instance.
 func NewKeyActions() *KeyActions {
 	return &KeyActions{

@@ -43,7 +43,7 @@ type Table struct {
 	Path          string
 	Extras        string
 	actions       *KeyActions
-	leaderActions *KeyActions
+	leaderActions map[tcell.Key]*KeyActions
 	cmdBuff       *model.FishBuff
 	styles        *config.Styles
 	viewSetting   *config.ViewSetting
@@ -70,7 +70,7 @@ func NewTable(gvr *client.GVR) *Table {
 		ctx:           context.Background(),
 		gvr:           gvr,
 		actions:       NewKeyActions(),
-		leaderActions: NewKeyActions(),
+		leaderActions: NewLeaderKeyspaces(),
 		cmdBuff:       model.NewFishBuff('/', model.FilterBuffer),
 		sortCol:       model1.SortColumn{ASC: true},
 	}
@@ -229,7 +229,7 @@ func (t *Table) ToggleWide() {
 }
 
 // Actions returns active menu bindings.
-func (t *Table) LeaderActions() *KeyActions {
+func (t *Table) LeaderActions() map[tcell.Key]*KeyActions {
 	return t.leaderActions
 }
 

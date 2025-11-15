@@ -20,6 +20,8 @@ import (
 )
 
 var waitingLeaderFollowUp bool
+var leaderKeyspaceSelected bool
+var leaderKeyspace *ui.KeyActions
 
 // Table represents a table viewer.
 type Table struct {
@@ -102,16 +104,30 @@ func (t *Table) keyboard(evt *tcell.EventKey) *tcell.EventKey {
 	}
 
 	if waitingLeaderFollowUp {
-		if a, ok := t.LeaderActions().Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
-			return a.Action(evt)
-			waitingLeaderFollowUp = false
+		keyspace, ok := t.LeaderActions()[ui.AsKey(evt)]
+		if !ok {
+			return evt
 		}
+		leaderKeyspaceSelected = true
+		leaderKeyspace = keyspace
 
+		waitingLeaderFollowUp = false
 		if ui.AsKey(evt) == tcell.KeyEsc {
 			waitingLeaderFollowUp = false
 		}
-	} else {
+	} else if leaderKeyspaceSelected {
+		if ui.AsKey(evt) == tcell.KeyEsc {
+			waitingLeaderFollowUp = false
+			leaderKeyspaceSelected = false
+			return evt
+		}
 
+		if a, ok := leaderKeyspace.Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
+			leaderKeyspaceSelected = false
+			return a.Action(evt)
+		}
+
+	} else {
 		if a, ok := t.Actions().Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
 			return a.Action(evt)
 		}
@@ -230,9 +246,9 @@ func (t *Table) bindKeys() {
 		ui.KeyShiftA:           ui.NewKeyAction("Sort Age", t.SortColCmd(ageCol, true), false),
 	})
 
-	t.LeaderActions().Bulk(ui.KeyMap{
-		ui.KeyHelp: ui.NewKeyAction("Rafal's Help", t.testNewFunc, true),
-	})
+	// t.LeaderActions()[tcell.Key(103)].Bulk(ui.KeyMap{
+	// 	ui.KeyHelp: ui.NewKeyAction("Rafal's Help", t.testNewFunc, true),
+	// })
 }
 
 func (t *Table) testNewFunc(*tcell.EventKey) *tcell.EventKey {
