@@ -177,7 +177,6 @@ func (a *App) ResetCmd() {
 }
 
 func (a *App) saveCmd(*tcell.EventKey) *tcell.EventKey {
-	a.Flash().Info("Rafal Wins")
 	a.QueueUpdateDraw(func() {})
 
 	return nil

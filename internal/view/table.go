@@ -5,6 +5,7 @@ package view
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,7 @@ import (
 
 var waitingLeaderFollowUp bool
 var leaderKeyspaceSelected bool
+var leaderKeyspaceName string
 var leaderKeyspace *ui.KeyActions
 
 // Table represents a table viewer.
@@ -104,28 +106,42 @@ func (t *Table) keyboard(evt *tcell.EventKey) *tcell.EventKey {
 	}
 
 	if waitingLeaderFollowUp {
+		if ui.AsKey(evt) == tcell.KeyEsc {
+			t.app.Flash().Info("Leader selection cancelled")
+			waitingLeaderFollowUp = false
+			return evt
+		}
+
 		keyspace, ok := t.LeaderActions()[ui.AsKey(evt)]
 		if !ok {
+			t.app.Flash().Info(fmt.Sprintf("No leader defined with key: %s", string(evt.Rune())))
+			waitingLeaderFollowUp = false
+			leaderKeyspaceSelected = false
 			return evt
 		}
 		leaderKeyspaceSelected = true
-		leaderKeyspace = keyspace
-
 		waitingLeaderFollowUp = false
-		if ui.AsKey(evt) == tcell.KeyEsc {
-			waitingLeaderFollowUp = false
-		}
+		leaderKeyspace = keyspace
+		leaderKeyspaceName = string(evt.Rune())
+
 	} else if leaderKeyspaceSelected {
 		if ui.AsKey(evt) == tcell.KeyEsc {
 			waitingLeaderFollowUp = false
 			leaderKeyspaceSelected = false
+			t.app.Flash().Info("Leader selection cancelled")
 			return evt
 		}
 
 		if a, ok := leaderKeyspace.Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
+			waitingLeaderFollowUp = false
 			leaderKeyspaceSelected = false
 			return a.Action(evt)
 		}
+
+		waitingLeaderFollowUp = false
+		leaderKeyspaceSelected = false
+
+		t.app.Flash().Info(fmt.Sprintf("No shortcut defined for: %s in keyspace %s", string(evt.Rune()), leaderKeyspaceName))
 
 	} else {
 		if a, ok := t.Actions().Get(ui.AsKey(evt)); ok && !t.app.Content.IsTopDialog() {
